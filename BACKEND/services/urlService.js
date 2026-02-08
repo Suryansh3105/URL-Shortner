@@ -13,3 +13,7 @@ export function createShortUrl(originalUrl){
     }
     throw new Error(`could not generate unique short URL`);
 }
+
+export function getOriginalUrl(shortCode){
+    return store.get(shortCode);
+}
