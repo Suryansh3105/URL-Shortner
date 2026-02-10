@@ -1,28 +1,57 @@
+import db from '../config/db.js'
+import { shortUrlTable } from "../models/shortUrl.model.js";
 import { generateShortUrl } from "../utils/generateShortUrl.js";
+import {eq} from 'drizzle-orm'
 
 const store = new Map();
 const MAX_RETRIES=5;
 
-export function createShortCode(originalUrl,customAlias){
+export async function createShortCode(originalUrl,customAlias){
     const normalizedAlias = customAlias?.toLowerCase();
     if(normalizedAlias){
-        if(store.has(normalizedAlias)){
+        const [existingAlias] = await db
+        .select()
+        .from(shortUrlTable)
+        .where(eq(shortUrlTable.shortCode,normalizedAlias));
+
+        if(existingAlias){
             throw new Error(`Alias already exist`)
-        }// think about think as res i not avaible in services // service used to return data return null or throw error
-        store.set(customAlias,originalUrl);
-        return customAlias;
+        }// service used to return data, null or throw error
+
+        const [result]= await db
+        .insert(shortUrlTable)
+        .values({shortCode:normalizedAlias,longUrl:originalUrl})
+        .returning({shortCode:shortUrlTable.shortCode,});
+
+        return result.shortCode;
     }
 
     for(let i=0;i<MAX_RETRIES;i++){
         const shortCode=generateShortUrl();
-        if(!store.has(shortCode)){
-            store.set(shortCode,originalUrl);
-            return shortCode;
+        const [existingCode] = await db.
+        select().
+        from(shortUrlTable).
+        where(eq(shortUrlTable.shortCode,shortCode));
+
+        if(!existingCode){
+            const [result] = await db.
+            insert(shortUrlTable).
+            values({shortCode,longUrl:originalUrl}).
+            returning({shortCode:shortUrlTable.shortCode});
+
+            return result.shortCode;
         }
     }
     throw new Error(`could not generate unique short URL`);
 }
 
-export function getOriginalUrl(shortCode){
-    return store.get(shortCode);
+export async function getOriginalUrl(shortCode){
+    const [result] = await db
+    .select()
+    .from(shortUrlTable)
+    .where(eq(shortUrlTable.shortCode,shortCode));
+    if(!result){
+        return null;
+    }
+    return result.longUrl;
 }
