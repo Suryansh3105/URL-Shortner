@@ -3,7 +3,6 @@ import { shortUrlTable } from "../models/shortUrl.model.js";
 import { generateShortUrl } from "../utils/generateShortUrl.js";
 import {eq} from 'drizzle-orm'
 
-const store = new Map();
 const MAX_RETRIES=5;
 
 export async function createShortCode(originalUrl,customAlias){
