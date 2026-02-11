@@ -1,7 +1,7 @@
 import db from '../config/db.js'
 import { shortUrlTable } from "../models/shortUrl.model.js";
 import { generateShortUrl } from "../utils/generateShortUrl.js";
-import {eq} from 'drizzle-orm'
+import {eq} from 'drizzle-orm';
 
 const MAX_RETRIES=5;
 
@@ -16,7 +16,6 @@ export async function createShortCode(originalUrl,customAlias){
         if(existingAlias){
             throw new Error(`Alias already exist`)
         }// service used to return data, null or throw error
-
         const [result]= await db
         .insert(shortUrlTable)
         .values({shortCode:normalizedAlias,longUrl:originalUrl})
