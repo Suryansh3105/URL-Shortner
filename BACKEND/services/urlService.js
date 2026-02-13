@@ -5,7 +5,7 @@ import {eq} from 'drizzle-orm';
 
 const MAX_RETRIES=5;
 
-export async function createShortCode(originalUrl,customAlias){
+export async function createShortCode(originalUrl,customAlias,expireAT){
     const normalizedAlias = customAlias?.toLowerCase();
     if(normalizedAlias){
         const [existingAlias] = await db
@@ -18,7 +18,7 @@ export async function createShortCode(originalUrl,customAlias){
         }// service used to return data, null or throw error
         const [result]= await db
         .insert(shortUrlTable)
-        .values({shortCode:normalizedAlias,longUrl:originalUrl})
+        .values({shortCode:normalizedAlias,longUrl:originalUrl,expireAT:expireAT || null})
         .returning({shortCode:shortUrlTable.shortCode,});
 
         return result.shortCode;
@@ -34,7 +34,7 @@ export async function createShortCode(originalUrl,customAlias){
         if(!existingCode){
             const [result] = await db.
             insert(shortUrlTable).
-            values({shortCode,longUrl:originalUrl}).
+            values({shortCode,longUrl:originalUrl,expireAT:expireAT || null}).
             returning({shortCode:shortUrlTable.shortCode});
 
             return result.shortCode;
@@ -48,8 +48,5 @@ export async function getOriginalUrl(shortCode){
     .select()
     .from(shortUrlTable)
     .where(eq(shortUrlTable.shortCode,shortCode));
-    if(!result){
-        return null;
-    }
-    return result.longUrl;
+    return result;
 }

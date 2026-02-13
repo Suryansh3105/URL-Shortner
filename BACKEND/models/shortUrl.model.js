@@ -5,4 +5,5 @@ export const shortUrlTable = pgTable("short_urls",{
     longUrl:text("long_url").notNull(),
     createdAt: timestamp("created_at",{ withTimezone: true}).notNull().defaultNow(),
     qrCode:text("qr_code",{mode:'nullable'}).default(null),
+    expireAT:timestamp('expires_at',{withTimezone:true}).default(null)
 })
